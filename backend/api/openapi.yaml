@@ -1,0 +1,377 @@
+#
+# CSE183 Assignment 8 Backend
+#
+
+openapi: '3.0.3'
+
+info:
+  description: CSE183 Assignment 8 Backend
+  version: 0.1.0
+  title: CSE183 Assignment 8 Backend
+
+servers:
+  - url: http://localhost:3010/v0
+
+paths:
+  /dummy:
+    get:
+      description: Dummy Endpoint
+      responses:
+        200:
+          description: Succesful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DummyResponse'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /listings:
+    get:
+      description: get listings from all categories
+      parameters:
+        - name: byUser
+          in: query
+          schema:
+            type: string
+          required: false
+          description: if set to anything then, listings returned will inly be listings owned by the user
+        - name: category
+          in: query
+          schema:
+            type: string
+          required: false
+          description: gets listings of the specified category
+        - name: subcategory
+          in: query
+          schema:
+            type: string
+          required: false
+          description: gets listings of the specified subcategory
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+          required: false
+          description: gets listings less then max price
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+          required: false
+          description: gets listings greater than min price
+        - name: maxDistance
+          in: query
+          schema:
+            type: number
+          required: false
+          description: gets listings closer than max distance in miles
+        - name: title
+          in: query
+          schema:
+            type: string
+          required: false
+          description: gets listings with matching title
+        - name: maxDaysOld
+          in: query
+          schema:
+            type: number
+          required: false
+          description: gets listings with newer than maxDaysOld
+        - name: specificAttribute
+          in: query
+          schema:
+            type: string
+          required: false
+          description: gets listings of specificAttribute
+        - name: brand
+          in: query
+          schema:
+            type: string
+          required: false
+          description: gets listings of brand
+        - name: long
+          in: query
+          schema:
+            type: number
+          required: false
+          description: specifies a longitude to check against when filtering by distance
+        - name: lat
+          in: query
+          schema:
+            type: number
+          required: false
+          description: specifies a latitude to check against when filtering by distance
+        - name: sort
+          in: query
+          schema:
+            type: string
+          required: false
+          description: specifies sorting by price in desc or asc
+      responses:
+        200:
+          description: Succesful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingResponse'
+        default:
+          description: unexpected error
+          content: {}
+  /listings/{title}:
+    get:
+      description: get listings by category
+      responses:
+        200:
+          description: Succesful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingResponse'
+        default:
+          description: unexpected error
+          content: {}
+  /listings/{category}:
+    get:
+      description: get listings by category
+      parameters:
+        - name: subcategory
+          in: query
+          schema:
+            type: string
+          required: false
+          description: subcategory name in full
+      responses:
+        200:
+          description: Succesful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingResponse'
+        default:
+          description: unexpected error
+          content: {}
+    post:
+      description: post a listing into a category
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/List'
+      parameters:
+        - name: subcategory
+          in: query
+          schema:
+            type: string
+          required: false
+          description: subcategory name in full
+      responses:
+        200:
+          description: Succesful
+          content: {}
+        default:
+          description: unexpected error
+          content: {}
+  /auth/register:
+    post:
+      description: Create User, and give user a session
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        409:
+          description: email/phone# already in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterError'
+        default:
+          description: server error
+          content: {}
+  /auth/login:
+    post:
+      description: Create User, and give user a session
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        401:
+          description: Invalid login credentials
+          content: {}
+        default:
+          description: server error
+          content: {}
+  /auth/logout:
+    post:
+      description: Create User, and give user a session
+      responses:
+        200:
+          description: successful operation
+          content: {}
+        401:
+          description: Must be logged in to logout
+          content: {}
+        default:
+          description: server error
+          content: {}
+  /auth/session:
+    get:
+      description: Check for valid session
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        401:
+          description: Not authorized
+          content: {}
+        default:
+          description: server error
+          content: {}
+components:
+  schemas:
+    Error:
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+      required:
+        - code
+        - message
+    DummyResponse:
+      properties:
+        message:
+          type: string
+      required:
+        - message
+    ListingResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/List'
+    List:
+      type: object
+      required:
+      - "title"
+      - "description"
+      - "price"
+      - "latitude"
+      - "longitude"
+      - "images"
+      properties:
+        ts:
+          type: "string"
+          format: "date-time"
+        userId:
+          type: "string"
+          format: "uuid"
+        title:
+          type: "string"
+        description:
+          type: "string"
+        category:
+          type: "string"
+        subcategory:
+          type: "string"
+          nullable: true
+        price:
+          type: "number"
+          format: "float"
+        latitude:
+          type: "number"
+          format: "float"
+        longitude:
+          type: "number"
+          format: "float"
+        images:
+          type: "array"
+          items:
+            type: "string"
+    NewUser:
+      type: "object"
+      required:
+      - "email"
+      - "phoneNumber"
+      - "password"
+      - "firstName"
+      - "lastName"
+      properties:
+        email:
+          type: "string"
+          format: "email"
+        phoneNumber:
+          type: "string"
+        firstName:
+          type: "string"
+        lastName:
+          type: "string"
+        password:
+          type: "string"
+    UserLogin:
+      type: "object"
+      required:
+      - "password"
+      properties:
+        email:
+          type: "string"
+          format: "email"
+        phoneNumber:
+          type: "string"
+        password:
+          type: "string"
+    LoginResponse:
+      type: "object"
+      required:
+      - "firstName"
+      - "lastName"
+      - "phoneNumber"
+      - "email"
+      properties:
+        email:
+          type: "string"
+          format: "email"
+        phoneNumber:
+          type: "string"
+        firstName:
+          type: "string"
+        lastName:
+          type: "string"
+    RegisterError:
+      type: "object"
+      required:
+      - "error"
+      properties:
+        error:
+          type: "string"
+    Location:
+      type: "object"
+      required:
+      - "latitude"
+      - "longitude"
+      properties:
+        latitude:
+          type: number
+        longitude:
+          type: number
